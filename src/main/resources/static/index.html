@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hospital Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #f0f4f8;
+      --surface:   #ffffff;
+      --primary:   #1a5f7a;
+      --accent:    #e63946;
+      --success:   #2a9d8f;
+      --warn:      #e9c46a;
+      --text:      #1d2d35;
+      --muted:     #6b7f8a;
+      --border:    #d4e0e8;
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(26,95,122,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    nav {
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      height: 64px;
+      box-shadow: 0 2px 12px rgba(26,95,122,0.25);
+    }
+    nav .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: #fff;
+      letter-spacing: .5px;
+    }
+    nav .logo span { color: var(--warn); }
+    nav .tabs { display: flex; gap: 4px; }
+    nav .tab {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    nav .tab:hover  { background: rgba(255,255,255,0.12); color:#fff; }
+    nav .tab.active { background: rgba(255,255,255,0.20); color:#fff; }
+
+    .page { display: none; padding: 36px; max-width: 1100px; margin: 0 auto; }
+    .page.active { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 20px; margin-bottom: 36px; }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--primary);
+      transition: transform .2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card.accent { border-left-color: var(--accent); }
+    .stat-card.success { border-left-color: var(--success); }
+    .stat-label { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+    .stat-value { font-family: 'DM Serif Display', serif; font-size: 2.4rem; color: var(--text); }
+
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .section-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.6rem; }
+    .search-bar { padding: 9px 16px; border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: .9rem; width: 220px; outline: none; transition: border .2s; }
+    .search-bar:focus { border-color: var(--primary); }
+
+    .table-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--primary); color: #fff; }
+    th { padding: 14px 18px; text-align: left; font-size: .82rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+    td { padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: .92rem; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f5f9fc; }
+
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-primary:hover  { background: #154f68; }
+    .btn-success  { background: var(--success); color: #fff; }
+    .btn-success:hover  { background: #228e81; }
+    .btn-danger   { background: var(--accent);  color: #fff; padding: 6px 14px; font-size: .82rem; }
+    .btn-danger:hover   { background: #c1121f; }
+    .btn-edit     { background: var(--warn); color: var(--text); padding: 6px 14px; font-size: .82rem; }
+    .btn-edit:hover     { background: #d4af37; }
+    .btn-sm-gap { display: flex; gap: 6px; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 36px;
+      width: 440px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: popIn .25s ease;
+    }
+    @keyframes popIn { from{transform:scale(.92);opacity:0} to{transform:scale(1);opacity:1} }
+    .modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.35rem; margin-bottom: 22px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+    input, select {
+      width: 100%; padding: 10px 13px; border: 1.5px solid var(--border);
+      border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: .93rem; outline: none; transition: border .2s;
+    }
+    input:focus, select:focus { border-color: var(--primary); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--muted); }
+
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--text); color: #fff;
+      padding: 13px 22px; border-radius: 10px;
+      font-size: .9rem; font-weight: 500;
+      opacity: 0; transition: opacity .3s;
+      z-index: 200; max-width: 320px;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { background: var(--success); }
+    #toast.error   { background: var(--accent); }
+
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
+    .badge-blue   { background: #e0f0f8; color: var(--primary); }
+    .badge-green  { background: #d4f0ed; color: var(--success); }
+    .badge-yellow { background: #fdf3d0; color: #9a7000; }
+
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty p { font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Medi<span>Care</span> HMS</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('dashboard', event)">Dashboard</button>
+    <button class="tab" onclick="showPage('patients', event)">Patients</button>
+    <button class="tab" onclick="showPage('doctors', event)">Doctors</button>
+    <button class="tab" onclick="showPage('appointments', event)">Appointments</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Patients</div>
+      <div class="stat-value" id="stat-patients">–</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-label">Total Doctors</div>
+      <div class="stat-value" id="stat-doctors">–</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Appointments</div>
+      <div class="stat-value" id="stat-appointments">–</div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th></tr></thead>
+      <tbody id="today-appointments">
+        <tr><td colspan="4"><div class="empty"><p>Loading...</p></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PATIENTS -->
+<div class="page" id="page-patients">
+  <div class="section-header">
+    <h2>Patients</h2>
+    <div style="display:flex;gap:10px">
+      <input class="search-bar" id="patient-search" placeholder="🔍  Search by name…" oninput="filterPatients()"/>
+      <button class="btn btn-primary" onclick="openModal('patient-modal')">+ Add Patient</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Actions</th></tr></thead>
+      <tbody id="patients-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DOCTORS -->
+<div class="page" id="page-doctors">
+  <div class="section-header">
+    <h2>Doctors</h2>
+    <div style="display:flex;gap:10px">
+      <input class="search-bar" id="doctor-search" placeholder="🔍  Search by name…" oninput="filterDoctors()"/>
+      <button class="btn btn-primary" onclick="openModal('doctor-modal')">+ Add Doctor</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Specialization</th><th>Actions</th></tr></thead>
+      <tbody id="doctors-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- APPOINTMENTS -->
+<div class="page" id="page-appointments">
+  <div class="section-header">
+    <h2>Appointments</h2>
+    <button class="btn btn-success" onclick="openModal('appt-modal')">+ Book Appointment</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Specialization</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody id="appointments-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Patient Modal -->
+<div class="modal-overlay" id="patient-modal">
+  <div class="modal">
+    <h3 id="patient-modal-title">Add Patient</h3>
+    <input type="hidden" id="patient-id"/>
+    <div class="form-group"><label>Full Name</label><input id="p-name" placeholder="e.g. Rahul Sharma"/></div>
+    <div class="form-group"><label>Age</label><input id="p-age" type="number" placeholder="e.g. 30"/></div>
+    <div class="form-group">
+      <label>Gender</label>
+      <select id="p-gender">
+        <option value="">Select gender</option>
+        <option>Male</option><option>Female</option><option>Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('patient-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePatient()">Save Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doctor Modal -->
+<div class="modal-overlay" id="doctor-modal">
+  <div class="modal">
+    <h3 id="doctor-modal-title">Add Doctor</h3>
+    <input type="hidden" id="doctor-id"/>
+    <div class="form-group"><label>Full Name</label><input id="d-name" placeholder="e.g. Dr. Priya Reddy"/></div>
+    <div class="form-group"><label>Specialization</label><input id="d-spec" placeholder="e.g. Cardiology"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('doctor-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoctor()">Save Doctor</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="modal-overlay" id="appt-modal">
+  <div class="modal">
+    <h3>Book Appointment</h3>
+    <div class="form-group">
+      <label>Patient</label>
+      <select id="appt-patient"></select>
+    </div>
+    <div class="form-group">
+      <label>Doctor</label>
+      <select id="appt-doctor" onchange="checkAvailability()"></select>
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input id="appt-date" type="date" onchange="checkAvailability()"/>
+    </div>
+    <div id="availability-badge" style="margin-bottom:10px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('appt-modal')">Cancel</button>
+      <button class="btn btn-success" onclick="bookAppointment()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = 'http://localhost:8080/api';
+  let allPatients = [], allDoctors = [];
+
+  function showPage(name, event) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'patients')     loadPatients();
+    if (name === 'doctors')      loadDoctors();
+    if (name === 'appointments') loadAppointments();
+    if (name === 'dashboard')    loadDashboard();
+  }
+
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    setTimeout(() => t.className = '', 3000);
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    if (id === 'appt-modal') populateApptDropdowns();
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.querySelectorAll(`#${id} input, #${id} select`).forEach(el => el.value = '');
+    const badge = document.getElementById('availability-badge');
+    if (badge) badge.innerHTML = '';
+  }
+
+  async function loadDashboard() {
+    const [patients, doctors, appointments] = await Promise.all([
+      fetch(`${API}/patients`).then(r=>r.json()),
+      fetch(`${API}/doctors`).then(r=>r.json()),
+      fetch(`${API}/appointments`).then(r=>r.json()),
+    ]);
+    document.getElementById('stat-patients').textContent = patients.length;
+    document.getElementById('stat-doctors').textContent = doctors.length;
+    document.getElementById('stat-appointments').textContent = appointments.length;
+
+    const tbody = document.getElementById('today-appointments');
+    if (appointments.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><p>No appointments yet</p></div></td></tr>`;
+    } else {
+      tbody.innerHTML = appointments.slice(0,5).map((a,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${a.patient.name}</td>
+          <td>${a.doctor.name}</td>
+          <td><span class="badge badge-green">${a.appointmentDate}</span></td>
+        </tr>`).join('');
+    }
+  }
+
+  async function loadPatients() {
+    const res = await fetch(`${API}/patients`);
+    allPatients = await res.json();
+    renderPatients(allPatients);
+  }
+
+  function renderPatients(data) {
+    const tbody = document.getElementById('patients-table');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><p>No patients found</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td><span class="badge badge-blue">#${p.id}</span></td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.age}</td>
+        <td><span class="badge badge-yellow">${p.gender}</span></td>
+        <td><div class="btn-sm-gap">
+          <button class="btn btn-edit" onclick="editPatient(${p.id})">Edit</button>
+          <button class="btn btn-danger" onclick="deletePatient(${p.id})">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterPatients() {
+    const q = document.getElementById('patient-search').value.toLowerCase();
+    renderPatients(allPatients.filter(p => p.name.toLowerCase().includes(q)));
+  }
+
+  async function savePatient() {
+    const id     = document.getElementById('patient-id').value;
+    const name   = document.getElementById('p-name').value.trim();
+    const age    = parseInt(document.getElementById('p-age').value);
+    const gender = document.getElementById('p-gender').value;
+    if (!name || !age || !gender) return toast('Please fill all fields', 'error');
+    const body   = { name, age, gender };
+    const url    = id ? `${API}/patients/${id}` : `${API}/patients`;
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (res.ok) {
+      toast(id ? 'Patient updated!' : 'Patient added!', 'success');
+      closeModal('patient-modal');
+      loadPatients();
+    } else toast('Something went wrong', 'error');
+  }
+
+  async function editPatient(id) {
+    const p = allPatients.find(x => x.id === id);
+    document.getElementById('patient-id').value  = p.id;
+    document.getElementById('p-name').value      = p.name;
+    document.getElementById('p-age').value       = p.age;
+    document.getElementById('p-gender').value    = p.gender;
+    document.getElementById('patient-modal-title').textContent = 'Edit Patient';
+    openModal('patient-modal');
+  }
+
+  async function deletePatient(id) {
+    if (!confirm('Delete this patient?')) return;
+    const res = await fetch(`${API}/patients/${id}`, { method: 'DELETE' });
+    if (res.ok) { toast('Patient deleted', 'success'); loadPatients(); }
+    else toast('Could not delete', 'error');
+  }
+
+  async function loadDoctors() {
+    const res = await fetch(`${API}/doctors`);
+    allDoctors = await res.json();
+    renderDoctors(allDoctors);
+  }
+
+  function renderDoctors(data) {
+    const tbody = document.getElementById('doctors-table');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><p>No doctors found</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(d => `
+      <tr>
+        <td><span class="badge badge-blue">#${d.id}</span></td>
+        <td><strong>${d.name}</strong></td>
+        <td><span class="badge badge-green">${d.specialization}</span></td>
+        <td><div class="btn-sm-gap">
+          <button class="btn btn-edit" onclick="editDoctor(${d.id})">Edit</button>
+          <button class="btn btn-danger" onclick="deleteDoctor(${d.id})">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterDoctors() {
+    const q = document.getElementById('doctor-search').value.toLowerCase();
+    renderDoctors(allDoctors.filter(d => d.name.toLowerCase().includes(q)));
+  }
+
+  async function saveDoctor() {
+    const id             = document.getElementById('doctor-id').value;
+    const name           = document.getElementById('d-name').value.trim();
+    const specialization = document.getElementById('d-spec').value.trim();
+    if (!name || !specialization) return toast('Please fill all fields', 'error');
+    const body   = { name, specialization };
+    const url    = id ? `${API}/doctors/${id}` : `${API}/doctors`;
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (res.ok) {
+      toast(id ? 'Doctor updated!' : 'Doctor added!', 'success');
+      closeModal('doctor-modal');
+      loadDoctors();
+    } else toast('Something went wrong', 'error');
+  }
+
+  async function editDoctor(id) {
+    const d = allDoctors.find(x => x.id === id);
+    document.getElementById('doctor-id').value = d.id;
+    document.getElementById('d-name').value    = d.name;
+    document.getElementById('d-spec').value    = d.specialization;
+    document.getElementById('doctor-modal-title').textContent = 'Edit Doctor';
+    openModal('doctor-modal');
+  }
+
+  async function deleteDoctor(id) {
+    if (!confirm('Delete this doctor?')) return;
+    const res = await fetch(`${API}/doctors/${id}`, { method: 'DELETE' });
+    if (res.ok) { toast('Doctor deleted', 'success'); loadDoctors(); }
+    else toast('Could not delete', 'error');
+  }
+
+  async function loadAppointments() {
+    const res  = await fetch(`${API}/appointments`);
+    const data = await res.json();
+    const tbody = document.getElementById('appointments-table');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><p>No appointments found</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(a => `
+      <tr>
+        <td><span class="badge badge-blue">#${a.id}</span></td>
+        <td>${a.patient.name}</td>
+        <td>${a.doctor.name}</td>
+        <td><span class="badge badge-green">${a.doctor.specialization}</span></td>
+        <td><span class="badge badge-yellow">${a.appointmentDate}</span></td>
+        <td><button class="btn btn-danger" onclick="cancelAppointment(${a.id})">Cancel</button></td>
+      </tr>`).join('');
+  }
+
+  async function populateApptDropdowns() {
+    const [patients, doctors] = await Promise.all([
+      fetch(`${API}/patients`).then(r=>r.json()),
+      fetch(`${API}/doctors`).then(r=>r.json()),
+    ]);
+    document.getElementById('appt-patient').innerHTML =
+      `<option value="">Select patient</option>` +
+      patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('appt-doctor').innerHTML =
+      `<option value="">Select doctor</option>` +
+      doctors.map(d => `<option value="${d.id}">${d.name} – ${d.specialization}</option>`).join('');
+  }
+
+  async function checkAvailability() {
+    const doctorId = document.getElementById('appt-doctor').value;
+    const date     = document.getElementById('appt-date').value;
+    const badge    = document.getElementById('availability-badge');
+    if (!doctorId || !date) return;
+    const res  = await fetch(`${API}/appointments/availability?doctorId=${doctorId}&date=${date}`);
+    const data = await res.json();
+    badge.innerHTML = data.available
+      ? `<span class="badge badge-green">✓ Doctor available on this date</span>`
+      : `<span class="badge" style="background:#fde8ea;color:var(--accent)">✗ Doctor already booked</span>`;
+  }
+
+  async function bookAppointment() {
+    const patientId       = document.getElementById('appt-patient').value;
+    const doctorId        = document.getElementById('appt-doctor').value;
+    const appointmentDate = document.getElementById('appt-date').value;
+    if (!patientId || !doctorId || !appointmentDate)
+      return toast('Please fill all fields', 'error');
+    const res = await fetch(`${API}/appointments`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId, doctorId, appointmentDate })
+    });
+    if (res.ok) {
+      toast('Appointment booked!', 'success');
+      closeModal('appt-modal');
+      loadAppointments();
+    } else {
+      const msg = await res.text();
+      toast(msg || 'Booking failed', 'error');
+    }
+  }
+
+  async function cancelAppointment(id) {
+    if (!confirm('Cancel this appointment?')) return;
+    const res = await fetch(`${API}/appointments/${id}`, { method: 'DELETE' });
+    if (res.ok) { toast('Appointment cancelled', 'success'); loadAppointments(); }
+    else toast('Could not cancel', 'error');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  loadDashboard();
+</script>
+</body>
+</html>
