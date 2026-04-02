@@ -4,14 +4,14 @@ A full-stack Hospital Management System built using Spring Boot, MySQL, and a mo
 
 ---
 
-## 🚀 Features
+## Features
 
-* 👨‍⚕️ Doctor Management (Add, View, Update, Delete)
-* 🧑‍🤝‍🧑 Patient Management (Add, View, Update, Delete)
-* 📅 Appointment Booking System
-* 📊 Dashboard with real-time data
-* 🔍 Search functionality
-* 🖥️ Clean and modern UI
+*  Doctor Management (Add, View, Update, Delete)
+*  Patient Management (Add, View, Update, Delete)
+*  Appointment Booking System
+*  Dashboard with real-time data
+*  Search functionality
+*  Clean and modern UI
 
 ---
 
@@ -141,11 +141,7 @@ Sensitive information like database credentials is excluded using `.gitignore`.
 
 ---
 
-## 📸 Screenshots
 
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
 
 ---
 
